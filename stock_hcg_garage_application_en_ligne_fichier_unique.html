@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stock HCG GARAGE</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo="> 
+  <!-- Bootstrap CDN pour une UI simple et responsive -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body{background:#f7f9fc}
+    .low-stock{background:#fff4f4}
+    .nav-brand{font-weight:700}
+    .card-small{min-height:110px}
+    .table-xs td, .table-xs th{padding:.35rem}
+    @media (max-width:576px){ .desktop-only{display:none} }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid">
+    <a class="navbar-brand nav-brand" href="#">Stock HCG GARAGE</a>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="#dashboard" data-bs-toggle="tab">Tableau de bord</a></li>
+        <li class="nav-item"><a class="nav-link" href="#produits" data-bs-toggle="tab">Produits</a></li>
+        <li class="nav-item"><a class="nav-link" href="#mouvements" data-bs-toggle="tab">Entrées / Sorties</a></li>
+        <li class="nav-item"><a class="nav-link" href="#ventes" data-bs-toggle="tab">Ventes</a></li>
+        <li class="nav-item"><a class="nav-link" href="#alertes" data-bs-toggle="tab">Alertes</a></li>
+        <li class="nav-item"><a class="nav-link" href="#rapports" data-bs-toggle="tab">Rapports</a></li>
+        <li class="nav-item"><a class="nav-link" href="#param" data-bs-toggle="tab">Paramètres</a></li>
+        <li class="nav-item"><a id="logoutBtn" class="nav-link">Déconnexion</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container my-4">
+  <!-- LOGIN -->
+  <div id="loginView" class="card mx-auto" style="max-width:420px">
+    <div class="card-body">
+      <h5 class="card-title">Connexion - Stock HCG GARAGE</h5>
+      <div class="mb-3">
+        <label class="form-label">Nom d'utilisateur</label>
+        <input id="loginUser" class="form-control" value="admin">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Mot de passe</label>
+        <input id="loginPass" type="password" class="form-control" value="admin123">
+      </div>
+      <div class="d-grid">
+        <button id="btnLogin" class="btn btn-primary">Se connecter</button>
+      </div>
+      <small class="text-muted mt-2 d-block">(identifiant par défaut : admin / mot de passe : admin123). Changez-le dans Paramètres.</small>
+    </div>
+  </div>
+
+  <!-- APP CONTENT -->
+  <div id="app" style="display:none">
+    <div class="tab-content">
+      <!-- Dashboard -->
+      <div class="tab-pane active" id="dashboard">
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <div class="card p-3 card-small">
+              <h6>Total produits</h6>
+              <h3 id="statTotalProducts">0</h3>
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="card p-3 card-small">
+              <h6>Valeur totale du stock</h6>
+              <h3 id="statTotalValue">0 FCFA</h3>
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="card p-3 card-small">
+              <h6>Ventes aujourd'hui</h6>
+              <h3 id="statSalesToday">0 FCFA</h3>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body">
+                <h6>Produits faibles en stock</h6>
+                <div id="lowStockList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Produits -->
+      <div class="tab-pane" id="produits">
+        <div class="d-flex justify-content-between mb-2">
+          <h5>Produits</h5>
+          <div>
+            <button class="btn btn-success" id="btnNewProduct">Nouveau produit</button>
+            <button class="btn btn-outline-secondary" id="exportProducts">Exporter CSV</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body p-2">
+            <table class="table table-striped table-sm table-xs mb-0">
+              <thead>
+                <tr><th>Nom</th><th>Catégorie</th><th>Qté</th><th>Prix U.</th><th>Stock min</th><th>Montant</th><th></th></tr>
+              </thead>
+              <tbody id="productsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mouvements -->
+      <div class="tab-pane" id="mouvements">
+        <div class="row">
+          <div class="col-md-5">
+            <div class="card mb-3">
+              <div class="card-body">
+                <h6>Enregistrer Entrée / Sortie</h6>
+                <div class="mb-2">
+                  <label>Type</label>
+                  <select id="movType" class="form-select">
+                    <option value="entree">Entrée</option>
+                    <option value="sortie">Sortie</option>
+                  </select>
+                </div>
+                <div class="mb-2">
+                  <label>Produit</label>
+                  <select id="movProduct" class="form-select"></select>
+                </div>
+                <div class="mb-2 row">
+                  <div class="col-6"><label>Quantité</label><input id="movQty" type="number" class="form-control" value="1"></div>
+                  <div class="col-6"><label>Prix unitaire</label><input id="movPrice" type="number" class="form-control" value="0"></div>
+                </div>
+                <div class="mb-2"><label>Motif / Observations</label><input id="movNote" class="form-control"></div>
+                <div class="d-grid"><button id="btnSaveMov" class="btn btn-primary mt-2">Enregistrer</button></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-7">
+            <div class="card">
+              <div class="card-body">
+                <h6>Historique des mouvements</h6>
+                <table class="table table-sm table-striped">
+                  <thead><tr><th>Date</th><th>Type</th><th>Produit</th><th>Qté</th><th>Prix U.</th><th>Montant</th></tr></thead>
+                  <tbody id="movementsTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ventes -->
+      <div class="tab-pane" id="ventes">
+        <div class="d-flex justify-content-between mb-2">
+          <h5>Ventes</h5>
+          <div>
+            <button class="btn btn-outline-secondary" id="exportSales">Exporter CSV</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <table class="table table-sm table-striped">
+              <thead><tr><th>Date</th><th>Produit</th><th>Qté</th><th>Prix U.</th><th>Montant</th></tr></thead>
+              <tbody id="salesTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alertes -->
+      <div class="tab-pane" id="alertes">
+        <div class="card">
+          <div class="card-body">
+            <h5>Alertes de stock</h5>
+            <div id="alertsArea"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rapports -->
+      <div class="tab-pane" id="rapports">
+        <div class="card">
+          <div class="card-body">
+            <h5>Rapports</h5>
+            <div class="row g-2">
+              <div class="col-md-3"><label>Date début</label><input id="repStart" type="date" class="form-control"></div>
+              <div class="col-md-3"><label>Date fin</label><input id="repEnd" type="date" class="form-control"></div>
+              <div class="col-md-3 align-self-end"><button id="btnGenerateReport" class="btn btn-primary">Générer</button></div>
+            </div>
+            <hr>
+            <div id="reportArea"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paramètres -->
+      <div class="tab-pane" id="param">
+        <div class="card">
+          <div class="card-body">
+            <h5>Paramètres</h5>
+            <div class="mb-3 row">
+              <div class="col-md-6"><label>Nom du logiciel</label><input id="paramAppName" class="form-control" value="Stock HCG GARAGE"></div>
+              <div class="col-md-6"><label>Devise</label><input id="paramCurrency" class="form-control" value="FCFA"></div>
+            </div>
+            <div class="mb-3 row">
+              <div class="col-md-6"><label>Admin utilisateur</label><input id="paramUser" class="form-control"></div>
+              <div class="col-md-6"><label>Mot de passe admin</label><input id="paramPass" type="password" class="form-control"></div>
+            </div>
+            <div class="d-grid"><button id="btnSaveParams" class="btn btn-success">Sauvegarder paramètres</button></div>
+            <small class="text-muted d-block mt-2">Les données sont stockées localement sur votre appareil (localStorage). Pour partager en ligne vous pouvez héberger ce fichier sur un hébergeur gratuit (Netlify, GitHub Pages) ou sur un serveur.</small>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="productModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Nouveau produit</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><label>Nom</label><input id="pName" class="form-control"></div>
+        <div class="mb-2"><label>Catégorie</label><input id="pCat" class="form-control"></div>
+        <div class="mb-2 row">
+          <div class="col-6"><label>Quantité</label><input id="pQty" type="number" class="form-control" value="0"></div>
+          <div class="col-6"><label>Prix unitaire</label><input id="pPrice" type="number" class="form-control" value="0"></div>
+        </div>
+        <div class="mb-2"><label>Stock minimum (alerte)</label><input id="pMin" type="number" class="form-control" value="1"></div>
+        <input type="hidden" id="pId">
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button><button id="saveProduct" class="btn btn-primary">Enregistrer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Stock HCG GARAGE - single file app using localStorage
+
+const APP_KEY = 'stock_hcg_data_v1';
+let state = { products: [], movements: [], sales: [], params: { appName: 'Stock HCG GARAGE', currency:'FCFA', adminUser:'admin', adminPass:'admin123' }, users: [] };
+
+// --- Storage helpers ---
+function loadState(){
+  const raw = localStorage.getItem(APP_KEY);
+  if(raw){ try{ state = JSON.parse(raw); }catch(e){ console.error('parse error',e); }
+  } else { saveState(); }
+}
+function saveState(){ localStorage.setItem(APP_KEY, JSON.stringify(state)); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+// --- Auth ---
+function showLogin(){ document.getElementById('loginView').style.display='block'; document.getElementById('app').style.display='none'; }
+function showApp(){ document.getElementById('loginView').style.display='none'; document.getElementById('app').style.display='block'; document.querySelector('a[data-bs-toggle="tab"]').click(); }
+
+// --- UI Render ---
+function renderProducts(){
+  const tbody = document.getElementById('productsTable'); tbody.innerHTML='';
+  state.products.forEach(p=>{
+    const montant = (p.qty*p.price)||0;
+    const tr = document.createElement('tr');
+    if(p.qty <= (p.minAlert||0)) tr.classList.add('low-stock');
+    tr.innerHTML = `<td>${p.name}</td><td>${p.cat||''}</td><td>${p.qty}</td><td>${formatNum(p.price)}</td><td>${p.minAlert||0}</td><td>${formatNum(montant)}</td><td><div class="btn-group"><button class="btn btn-sm btn-primary" onclick="editProduct('${p.id}')">Modifier</button><button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">Supprimer</button></div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderMovements(){
+  const tbody = document.getElementById('movementsTable'); tbody.innerHTML='';
+  state.movements.slice().reverse().forEach(m=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${new Date(m.date).toLocaleString()}</td><td>${m.type}</td><td>${m.productName}</td><td>${m.qty}</td><td>${formatNum(m.price)}</td><td>${formatNum(m.qty*m.price)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderSales(){
+  const tbody = document.getElementById('salesTable'); tbody.innerHTML='';
+  state.sales.slice().reverse().forEach(s=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.productName}</td><td>${s.qty}</td><td>${formatNum(s.price)}</td><td>${formatNum(s.qty*s.price)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderDashboard(){
+  document.getElementById('statTotalProducts').innerText = state.products.length;
+  const totalValue = state.products.reduce((acc,p)=>acc + (p.qty*p.price),0);
+  document.getElementById('statTotalValue').innerText = formatNum(totalValue)+' '+state.params.currency;
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const salesToday = state.sales.filter(s=> new Date(s.date).getTime()>=start ).reduce((a,b)=>a+b.qty*b.price,0);
+  document.getElementById('statSalesToday').innerText = formatNum(salesToday)+' '+state.params.currency;
+
+  const low = state.products.filter(p=> p.qty <= (p.minAlert||0));
+  const lowDiv = document.getElementById('lowStockList'); lowDiv.innerHTML='';
+  if(low.length===0) lowDiv.innerHTML = '<div class="text-success">Aucun produit critique</div>';
+  low.forEach(p=>{ const d = document.createElement('div'); d.innerHTML = `<b>${p.name}</b> — Qté: ${p.qty} (min: ${p.minAlert})`; lowDiv.appendChild(d); });
+}
+
+function renderAlerts(){
+  const a = document.getElementById('alertsArea'); a.innerHTML='';
+  state.products.filter(p=> p.qty <= (p.minAlert||0)).forEach(p=>{
+    const el = document.createElement('div'); el.className='alert alert-danger'; el.innerHTML = `<b>${p.name}</b> en rupture ou faible stock — Qté: ${p.qty}`; a.appendChild(el);
+  });
+  if(a.innerHTML==='') a.innerHTML='<div class="alert alert-success">Aucune alerte.</div>';
+}
+
+function populateProductSelect(){
+  const sel = document.getElementById('movProduct'); sel.innerHTML='';
+  state.products.forEach(p=>{ const o = document.createElement('option'); o.value=p.id; o.innerText=`${p.name} (Qté: ${p.qty})`; sel.appendChild(o); });
+}
+
+// --- CRUD produits ---
+function openNewProduct(){
+  document.getElementById('pId').value=''; document.getElementById('pName').value=''; document.getElementById('pCat').value=''; document.getElementById('pQty').value=0; document.getElementById('pPrice').value=0; document.getElementById('pMin').value=1;
+  new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+function saveProductModal(){
+  const id = document.getElementById('pId').value || uid();
+  const name = document.getElementById('pName').value.trim(); if(!name){ alert('Nom requis'); return; }
+  const cat = document.getElementById('pCat').value.trim(); const qty = Number(document.getElementById('pQty').value)||0; const price = Number(document.getElementById('pPrice').value)||0; const minAlert = Number(document.getElementById('pMin').value)||0;
+  const exists = state.products.find(p=>p.id===id);
+  if(exists){ exists.name=name; exists.cat=cat; exists.qty=qty; exists.price=price; exists.minAlert=minAlert; }
+  else state.products.push({id,name,cat,qty,price,minAlert});
+  saveState(); renderAll();
+  bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+}
+function editProduct(id){
+  const p = state.products.find(x=>x.id===id); if(!p) return;
+  document.getElementById('pId').value=p.id; document.getElementById('pName').value=p.name; document.getElementById('pCat').value=p.cat||''; document.getElementById('pQty').value=p.qty; document.getElementById('pPrice').value=p.price; document.getElementById('pMin').value=p.minAlert||0;
+  new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+function deleteProduct(id){ if(!confirm('Supprimer ce produit ?')) return; state.products = state.products.filter(p=>p.id!==id); saveState(); renderAll(); }
+
+// --- Mouvements (entrée / sortie) ---
+function saveMovement(){
+  const type = document.getElementById('movType').value; const pid = document.getElementById('movProduct').value; const qty = Number(document.getElementById('movQty').value)||0; const price = Number(document.getElementById('movPrice').value)||0; const note = document.getElementById('movNote').value||'';
+  const p = state.products.find(x=>x.id===pid); if(!p){ alert('Produit invalide'); return; }
+  if(type==='sortie' && qty>p.qty){ if(!confirm('La quantité sortie dépasse la quantité en stock. Continuer ?')) return; }
+  // update product qty
+  if(type==='entree') p.qty += qty; else p.qty -= qty;
+  // record movement
+  const m = { id: uid(), date: new Date().toISOString(), type, productId: pid, productName: p.name, qty, price, note };
+  state.movements.push(m);
+  // if sortie, also add to sales
+  if(type==='sortie'){
+    state.sales.push({ id: uid(), date: new Date().toISOString(), productId: pid, productName: p.name, qty, price });
+  }
+  saveState(); renderAll();
+}
+
+// --- Reports ---
+function generateReport(){
+  const s = document.getElementById('repStart').value; const e = document.getElementById('repEnd').value; if(!s || !e){ alert('Choisir une période'); return; }
+  const start = new Date(s).getTime(); const end = new Date(e).getTime()+24*3600*1000-1;
+  const sales = state.sales.filter(x=>{ const t=new Date(x.date).getTime(); return t>=start && t<=end; });
+  let html = `<h6>Ventes du ${s} au ${e}</h6>`;
+  if(sales.length===0) html += '<div>Aucune vente</div>';
+  else{
+    html += '<table class="table table-sm"><thead><tr><th>Date</th><th>Produit</th><th>Qté</th><th>Prix U.</th><th>Montant</th></tr></thead><tbody>';
+    sales.forEach(sale=>{ html += `<tr><td>${new Date(sale.date).toLocaleString()}</td><td>${sale.productName}</td><td>${sale.qty}</td><td>${formatNum(sale.price)}</td><td>${formatNum(sale.qty*sale.price)}</td></tr>`; });
+    html += '</tbody></table>';
+    const total = sales.reduce((a,b)=>a+b.qty*b.price,0); html += `<div class="mt-2"><b>Total:</b> ${formatNum(total)} ${state.params.currency}</div>`;
+  }
+  document.getElementById('reportArea').innerHTML = html;
+}
+
+// --- Utils ---
+function formatNum(n){ return Number(n).toLocaleString('fr-FR'); }
+
+function renderAll(){ renderProducts(); renderMovements(); renderSales(); renderDashboard(); renderAlerts(); populateProductSelect(); document.title = state.params.appName || 'Stock'; }
+
+// --- Export CSV ---
+function exportCSV(rows, filename='export.csv'){
+  if(rows.length===0){ alert('Rien à exporter'); return; }
+  const keys = Object.keys(rows[0]);
+  const lines = [keys.join(',')];
+  rows.forEach(r=>{ lines.push(keys.map(k=>`"${String(r[k]||'').replace(/"/g,'""')}"`).join(',')); });
+  const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+}
+
+// --- Params ---
+function saveParams(){ state.params.appName = document.getElementById('paramAppName').value||state.params.appName; state.params.currency = document.getElementById('paramCurrency').value||state.params.currency; state.params.adminUser = document.getElementById('paramUser').value||state.params.adminUser; state.params.adminPass = document.getElementById('paramPass').value||state.params.adminPass; saveState(); alert('Paramètres sauvegardés'); renderAll(); }
+
+// --- Login handlers ---
+function tryLogin(){ const u=document.getElementById('loginUser').value; const p=document.getElementById('loginPass').value; if(u===state.params.adminUser && p===state.params.adminPass){ showApp(); renderAll(); } else alert('Identifiants incorrects'); }
+
+// --- Init ---
+function init(){ loadState(); // ensure params exist
+  state.params = Object.assign({ appName:'Stock HCG GARAGE', currency:'FCFA', adminUser:'admin', adminPass:'admin123' }, state.params||{});
+  document.getElementById('paramAppName').value = state.params.appName; document.getElementById('paramCurrency').value = state.params.currency; document.getElementById('paramUser').value = state.params.adminUser; document.getElementById('paramPass').value = state.params.adminPass;
+  document.getElementById('btnLogin').addEventListener('click', tryLogin);
+  document.getElementById('btnSaveParams').addEventListener('click', saveParams);
+  document.getElementById('btnNewProduct').addEventListener('click', openNewProduct);
+  document.getElementById('saveProduct').addEventListener('click', saveProductModal);
+  document.getElementById('btnSaveMov').addEventListener('click', saveMovement);
+  document.getElementById('btnGenerateReport').addEventListener('click', generateReport);
+  document.getElementById('exportProducts').addEventListener('click', ()=> exportCSV(state.products, 'produits.csv'));
+  document.getElementById('exportSales').addEventListener('click', ()=> exportCSV(state.sales, 'ventes.csv'));
+  document.getElementById('logoutBtn').addEventListener('click', ()=>{ showLogin(); });
+  document.getElementById('movType').addEventListener('change', ()=>{ const t=document.getElementById('movType').value; document.getElementById('movPrice').value = (t==='sortie' && state.products.length? state.products[0].price:0); });
+  // initial render
+  renderAll();
+}
+
+window.addEventListener('load', init);
+
+</script>
+</body>
+</html>
